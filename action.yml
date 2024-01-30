@@ -36,6 +36,7 @@ inputs:
     default: true
 
   commit_method:
+    default: commit
     required: true
     type: string
     description: "The method to apply changes. Can be either 'commit' or 'pr'."
@@ -105,7 +106,7 @@ runs:
         path: 'github'
 
     - uses: actions-tools/yaml-outputs@49506207f91d468273fd5e73fbd18d6d2d9df9b1
-      id: readme
+      id: config
       with:
         file-path: 'README.yaml'
         fail-on-file-not-found: false
@@ -120,7 +121,7 @@ runs:
       id: meta
       uses: actions/github-script@v7
       env:
-        README_NAME: ${{steps.readme.outputs.name}}
+        README_NAME: ${{steps.config.outputs.name}}
         REPOSITORY_NAME: ${{ steps.metadata.outputs.repository_name }}
         REPOSITORY_DESCRIPTION: ${{ steps.metadata.outputs.repository_description }}
       with:
@@ -227,14 +228,14 @@ runs:
         file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
 
     - name: Add Image to Step Summary
-      if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.banner_enabled == 'true' && commit_method == 'commit'
+      if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
       shell: bash
       run: |
         echo "## Generated Screenshot" >> $GITHUB_STEP_SUMMARY
         echo "![Generated Screenshot](https://github.com/${{ github.repository }}/blob/${{ steps.auto-commit.outputs.commit_hash }}/${{ steps.banner.outputs.file }}?raw=true)" >> $GITHUB_STEP_SUMMARY
 
     - name: No changes
-      if: steps.auto-commit.outputs.changes_detected == 'false' && inputs.banner_enabled == 'true' && commit_method == 'commit'
+      if: steps.auto-commit.outputs.changes_detected == 'false' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
       shell: bash
       run: |
         echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
@@ -272,7 +273,7 @@ runs:
         token: ${{ inputs.github_access_token }}
 
     - name: Add Image to Step Summary
-      if: steps.auto-pr.outputs.pull-request-number && commit_method == 'pr' && inputs.banner_enabled == 'true'
+      if: steps.auto-pr.outputs.pull-request-number && inputs.commit_method == 'pr' && inputs.banner_enabled == 'true'
       shell: bash
       run: |
         echo "## Generated Pull Request" >> $GITHUB_STEP_SUMMARY
@@ -280,7 +281,7 @@ runs:
         echo "Pull Request URL: ${{ steps.auto-pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY    
 
     - name: No changes
-      if: steps.auto-pr.outputs.pull-request-number == false and commit_method == 'pr'
+      if: steps.auto-pr.outputs.pull-request-number == false && inputs.commit_method == 'pr'
       shell: bash
       run: |
         echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
