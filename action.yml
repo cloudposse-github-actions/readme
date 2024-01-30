@@ -8,7 +8,7 @@ branding:
   icon: 'edit'
   color: 'white'
 inputs:
-  github_access_token:
+  token:
     description: "GitHub API token (use a PAT if you need to trigger other actions)" 
     default: "${{ github.token }}"
     required: false
@@ -207,7 +207,7 @@ runs:
       shell: bash
       id: readme
       env:
-        GITHUB_TOKEN: "${{ inputs.github_access_token }}"
+        GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
         make init
         make readme/build
@@ -223,7 +223,7 @@ runs:
       name: Commit artifact
       id: auto-commit
       env:
-        GITHUB_TOKEN: ${{ inputs.github_access_token }}
+        GITHUB_TOKEN: ${{ inputs.token }}
       with:
         # parameterize the following..
         commit_message: "${{ inputs.commit_message }}"
@@ -275,7 +275,7 @@ runs:
           
         # Requires a GitHub PAT used to open PRs that trigger other workflows
         # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
-        token: ${{ inputs.github_access_token }}
+        token: ${{ inputs.token }}
 
     - name: Add Image to Step Summary
       if: steps.auto-pr.outputs.pull-request-number && inputs.commit_method == 'pr' && inputs.banner_enabled == 'true'
