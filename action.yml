@@ -188,12 +188,9 @@ runs:
         viewportHeight: 320
         omitBackground: true
 
-    - name: Update readme
+    - name: Initialize Makefile with `build-harness` support
       if: inputs.readme_enabled == 'true'
       shell: bash
-      id: readme
-      env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         if [[ ! -f Makefile ]]; then
           echo '-include $(shell curl -sSL -o .build-harness "https://cloudposse.tools/build-harness"; echo .build-harness)' > Makefile
@@ -204,7 +201,7 @@ runs:
       shell: bash
       id: readme
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        GITHUB_TOKEN: "${{ inputs.github_access_token }}"
       run: |
         make init
         make readme/build
@@ -220,24 +217,24 @@ runs:
       name: Commit artifact
       id: auto-commit
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_access_token }}
       with:
         # parameterize the following..
         commit_message: "${{ inputs.commit_message }}"
         commit_user_name: "${{ inputs.commit_user_name }}"
         commit_user_email: "${{ inputs.commit_user_email }}"
-        commit_author: ${{ inputs.commit_author }
+        commit_author: "${{ inputs.commit_author }}"
         file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
 
     - name: Add Image to Step Summary
-      if: steps.auto-commit.outputs.changes_detected == 'true' and inputs.banner_enabled == 'true' and commit_method == 'commit'
+      if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.banner_enabled == 'true' && commit_method == 'commit'
       shell: bash
       run: |
         echo "## Generated Screenshot" >> $GITHUB_STEP_SUMMARY
         echo "![Generated Screenshot](https://github.com/${{ github.repository }}/blob/${{ steps.auto-commit.outputs.commit_hash }}/${{ steps.banner.outputs.file }}?raw=true)" >> $GITHUB_STEP_SUMMARY
 
     - name: No changes
-      if: steps.auto-commit.outputs.changes_detected == 'false' and inputs.banner_enabled == 'true' and commit_method == 'commit'
+      if: steps.auto-commit.outputs.changes_detected == 'false' && inputs.banner_enabled == 'true' && commit_method == 'commit'
       shell: bash
       run: |
         echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
@@ -275,7 +272,7 @@ runs:
         token: ${{ inputs.github_access_token }}
 
     - name: Add Image to Step Summary
-      if: steps.auto-pr.outputs.pull-request-number and commit_method == 'pr' and inputs.banner_enabled == 'true'
+      if: steps.auto-pr.outputs.pull-request-number && commit_method == 'pr' && inputs.banner_enabled == 'true'
       shell: bash
       run: |
         echo "## Generated Pull Request" >> $GITHUB_STEP_SUMMARY
