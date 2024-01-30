@@ -60,13 +60,18 @@ inputs:
     description: "The author to use when committing changes."
     type: string
 
-  base-branch:
+  pr_base_branch:
     description: "Repo default base-branch for Pull Requests (when commit_method: pr)"
     type: string
     required: false
     default: ''
 
-  labels:
+  pr_title:
+    default: "Update README.md and docs"
+    description: "The title to use when creating a Pull Request (when commit_method: pr)"
+    type: string
+
+  pr_labels:
     description: "Whitespace-separated list of labels to apply to Pull Requests (when commit_method: pr)"
     type: string
     required: false
@@ -93,7 +98,7 @@ runs:
 
     - name: Checkout ${{ inputs.repository_org || steps.metadata.outputs.owner_login}}/.github
       if: steps.metadata.outputs.repository_name != '.github'
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: '${{ inputs.repository_org || steps.metadata.outputs.owner_login }}/.github'
         ref: 'main'
@@ -107,6 +112,7 @@ runs:
 
     - name: Symlink ${{github.workspace}} to `github/`
       if: steps.metadata.outputs.repository_name == '.github'
+      shell: bash
       run: |
         ln -s ${{github.workspace}} ${{github.workspace}}/github
 
@@ -225,12 +231,14 @@ runs:
 
     - name: Add Image to Step Summary
       if: steps.auto-commit.outputs.changes_detected == 'true' and inputs.banner_enabled == 'true' and commit_method == 'commit'
+      shell: bash
       run: |
         echo "## Generated Screenshot" >> $GITHUB_STEP_SUMMARY
         echo "![Generated Screenshot](https://github.com/${{ github.repository }}/blob/${{ steps.auto-commit.outputs.commit_hash }}/${{ steps.banner.outputs.file }}?raw=true)" >> $GITHUB_STEP_SUMMARY
 
     - name: No changes
       if: steps.auto-commit.outputs.changes_detected == 'false' and inputs.banner_enabled == 'true' and commit_method == 'commit'
+      shell: bash
       run: |
         echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
         echo "> No changes to screenshot" >> $GITHUB_STEP_SUMMARY   
@@ -239,16 +247,16 @@ runs:
       if: inputs.commit_method == 'pr'
       uses: cloudposse/actions/github/create-pull-request@0.33.0
       id: auto-pr
-      add-paths: |
-        ${{ steps.banner.outputs.file }},
-        ${{ steps.readme.outputs.file }},
-        docs/*
+
       with:
-        commit-message: Update README.md and docs
-        title: Update README.md and docs
+        title: ${{ inputs.pr_title }}
         author: ${{ inputs.commit_author }}
         commit-message: ${{ inputs.commit_message }}
         committer: ${{ inputs.commit_author }}
+        add-paths: |
+          ${{ steps.banner.outputs.file }},
+          ${{ steps.readme.outputs.file }},
+          docs/*
 
         body: |-
           ## what
@@ -258,16 +266,17 @@ runs:
           To have most recent changes of README.md and doc from origin templates
 
         branch: auto-update/readme
-        base: ${{ inputs.base-branch || steps.metadata.outputs.repository_default_branch }}
+        base: ${{ inputs.pr_base_branch || steps.metadata.outputs.repository_default_branch }}
         delete-branch: true
-        labels: ${{ inputs.labels }}
+        labels: ${{ inputs.pr_labels }}
           
         # Requires a GitHub PAT used to open PRs that trigger other workflows
         # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
-        token: ${{ secrets.github_access_token }}
+        token: ${{ inputs.github_access_token }}
 
     - name: Add Image to Step Summary
       if: steps.auto-pr.outputs.pull-request-number and commit_method == 'pr' and inputs.banner_enabled == 'true'
+      shell: bash
       run: |
         echo "## Generated Pull Request" >> $GITHUB_STEP_SUMMARY
         echo "Pull Request Number: #${{ steps.auto-pr.outputs.pull-request-number }}" >> $GITHUB_STEP_SUMMARY    
@@ -275,6 +284,7 @@ runs:
 
     - name: No changes
       if: steps.auto-pr.outputs.pull-request-number == false and commit_method == 'pr'
+      shell: bash
       run: |
         echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
         echo "> No pull request was created." >> $GITHUB_STEP_SUMMARY
