@@ -12,6 +12,7 @@ inputs:
     description: "GitHub API token (use a PAT if you need to trigger other actions)" 
     default: "${{ github.token }}"
     required: false
+    type: string
 
   repository_org:
     description: "GitHub organization or user name used for the banner templates"
