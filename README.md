@@ -1,7 +1,7 @@
 
 <!-- markdownlint-disable -->
 [![Project Banner](.github/banner.png?raw=true)](https://cpco.io/homepage)
- [![Latest Release](https://img.shields.io/github/release/cloudposse/example-github-action-composite.svg)](https://github.com/cloudposse/example-github-action-composite/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
+ [![Latest Release](https://img.shields.io/github/release/cloudposse-github-actions/readme.svg)](https://github.com/cloudposse-github-actions/readme/releases/latest) [![Slack Community](https://slack.cloudposse.com/badge.svg)](https://slack.cloudposse.com)
 <!-- markdownlint-restore -->
 
 
@@ -26,7 +26,8 @@
 
 -->
 
-Template repository of composite GitHub Action
+Rebuilds [`README.md`](README.md) and associated banners from templates using the [`README.yaml`](README.yaml) metadata.
+
 
 
 ---
@@ -41,8 +42,8 @@ Template repository of composite GitHub Action
 
 ## Introduction
 
-This is template repository to create composite GitHub Actions. 
-Feel free to use it as reference and starting point.
+This opinionated implementation builds upon Cloud Posse's build-harness and README.yaml
+used throughout Cloud Posse's GitHub repositories.
 
 
 
@@ -50,25 +51,69 @@ Feel free to use it as reference and starting point.
 
 
 
+To use this project, follow these steps:
+
+Add the following code to your workflow file (e.g., `.github/workflows/readme.yml`):
+
 ```yaml
-  name: Pull Request
+name: README
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rebuild README.md and Banner
+        uses: cloudposse-github-actions/readme@v0
+        id: readme
+        with:
+          banner_enabled: true
+          readme_enabled: true
+
+    outputs:
+      result: ${{ steps.readme.outputs.result1 }}
+```
+
+## Advanced Usage
+
+In the following example, we use the `workflow_dispatch` event to allow manual triggering of the workflow to rebuild the readme.  
+We also use the `pull_request` event to register the workflow from the PR. This allows us to test the workflow before merging
+it to the main branch.
+
+```yaml
+  name: README
   on:
+    # Allow manual triggering of workflow to rebuild readme
+    workflow_dispatch: {}
+
+    ## Added pull_request to register workflow from the PR.
+    ## Read more https://stackoverflow.com/questions/63362126/github-actions-how-to-run-a-workflow-created-on-a-non-master-branch-from-the-wo
     pull_request:
-      branches: [ 'main' ]
-      types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+      branches-ignore: ['*']
+
+  schedule:
+    # Update README.md nightly at 4am UTC
+    #         .---------------- minute (0 - 59)
+    #         |  .------------- hour (0 - 23)
+    #         |  |  .---------- day of month (1 - 31)
+    #         |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+    #         |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+    #         |  |  |  |  |
+    - cron:  '0  4  *  *  *'
 
   jobs:
-    context:
+    generate:
       runs-on: ubuntu-latest
       steps:
-        - name: Example action
-          uses: cloudposse/example-github-action-composite@main
-          id: example
+        - name: Rebuild README.md and Banner
+          uses: cloudposse-github-actions/readme@v0
+          id: readme
           with:
-            param1: true
-
-      outputs:
-        result: ${{ steps.example.outputs.result1 }}
+            banner_enabled: true
+            readme_enabled: true
 ```
 
 
@@ -95,7 +140,7 @@ Feel free to use it as reference and starting point.
 | readme\_enabled | readme\_enabled | true | false |
 | repository\_description | repository\_description |  | false |
 | repository\_name | repository\_name |  | false |
-| repository\_org | repository\_org |  | false |
+| repository\_org | GitHub organization or user name used for the banner templates |  | false |
 
 
 ## Outputs
@@ -117,8 +162,7 @@ Check out these related projects.
 
 For additional context, refer to some of these links.
 
-- [github-actions-workflows](https://github.com/cloudposse/github-actions-workflows) - Reusable workflows for different types of projects
-- [example-github-action-release-workflow](https://github.com/cloudposse/example-github-action-release-workflow) - Example application with complicated release workflow
+- [screenshot](https://github.com/cloudposse-github-actions/screenshot) - 
 
 
 ## ✨ Contributing
@@ -126,13 +170,13 @@ For additional context, refer to some of these links.
 This project is under active development, and we encourage contributions from our community. 
 Many thanks to our outstanding contributors:
 
-<a href="https://github.com/cloudposse/example-github-action-composite/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=cloudposse/example-github-action-composite&max=24" />
+<a href="https://github.com/cloudposse-github-actions/readme/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cloudposse-github-actions/readme&max=24" />
 </a>
 
 ### 🐛 Bug Reports & Feature Requests
 
-Please use the [issue tracker](https://github.com/cloudposse/example-github-action-composite/issues) to report any bugs or file feature requests.
+Please use the [issue tracker](https://github.com/cloudposse-github-actions/readme/issues) to report any bugs or file feature requests.
 
 ### 💻 Developing
 
@@ -219,24 +263,24 @@ Copyright © 2017-2024 [Cloud Posse, LLC](https://cpco.io/copyright)
 [![Beacon][beacon]][website]
 <!-- markdownlint-disable -->
   [logo]: https://cloudposse.com/logo-300x69.svg
-  [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=docs
-  [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=website
-  [github]: https://cpco.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=github
-  [jobs]: https://cpco.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=jobs
-  [hire]: https://cpco.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=hire
-  [slack]: https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=slack
-  [twitter]: https://cpco.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=twitter
-  [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=office_hours
-  [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=newsletter
-  [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=email
-  [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=commercial_support
-  [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=we_love_open_source
-  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=terraform_modules
+  [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=docs
+  [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=website
+  [github]: https://cpco.io/github?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=github
+  [jobs]: https://cpco.io/jobs?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=jobs
+  [hire]: https://cpco.io/hire?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=hire
+  [slack]: https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=slack
+  [twitter]: https://cpco.io/twitter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=twitter
+  [office_hours]: https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=office_hours
+  [newsletter]: https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=newsletter
+  [email]: https://cpco.io/email?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=email
+  [commercial_support]: https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=commercial_support
+  [we_love_open_source]: https://cpco.io/we-love-open-source?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=we_love_open_source
+  [terraform_modules]: https://cpco.io/terraform-modules?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=terraform_modules
   [readme_header_img]: https://cloudposse.com/readme/header/img
-  [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=readme_header_link
+  [readme_header_link]: https://cloudposse.com/readme/header/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=readme_header_link
   [readme_footer_img]: https://cloudposse.com/readme/footer/img
-  [readme_footer_link]: https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=readme_footer_link
+  [readme_footer_link]: https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=readme_footer_link
   [readme_commercial_support_img]: https://cloudposse.com/readme/commercial-support/img
-  [readme_commercial_support_link]: https://cloudposse.com/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/example-github-action-composite&utm_content=readme_commercial_support_link
-  [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/cloudposse/example-github-action-composite?pixel&cs=github&cm=readme&an=example-github-action-composite
+  [readme_commercial_support_link]: https://cloudposse.com/readme/commercial-support/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=readme_commercial_support_link
+  [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/cloudposse-github-actions/readme?pixel&cs=github&cm=readme&an=readme
 <!-- markdownlint-restore -->
