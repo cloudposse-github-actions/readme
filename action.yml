@@ -211,7 +211,7 @@ runs:
           git restore README.md
           echo Ignoring whitespace-only changes in README
         fi
-        echo "file=README.md" >> $GITHUB_OUTPUTS
+        echo "file=README.md" >> $GITHUB_OUTPUT
 
     - uses: stefanzweifel/git-auto-commit-action@v4
       if: inputs.commit_method == 'commit'
