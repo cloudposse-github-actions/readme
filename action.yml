@@ -1,5 +1,8 @@
 name: 'README Generator'
-description: 'Rebuilds README.md and associated banners from templates and README.yaml metadata'
+description: |
+  Rebuilds README.md and associated banners from templates and README.yaml metadata.
+  This opinionated implementation builds upon Cloud Posse's build-harness and README.yaml
+  used through out Cloud Posse's GitHub repositories.
 author: hello@cloudposse.com
 branding:
   icon: 'edit'
