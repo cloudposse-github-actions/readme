@@ -1,6 +1,6 @@
 name: 'README Generator'
 description: |
-  Rebuilds README.md and associated banners from templates and README.yaml metadata.
+  Rebuilds README.md and associated banners from templates and README.yaml metadata and runs link validation.
   This opinionated implementation builds upon Cloud Posse's build-harness and README.yaml
   used through out Cloud Posse's GitHub repositories.
 author: hello@cloudposse.com
@@ -40,6 +40,12 @@ inputs:
     type: boolean
     default: true
 
+  validate_readme:
+    type: boolean
+    required: false
+    default: true
+    description: "Validate the README.md file using markdown-link-check"
+
   commit_method:
     default: commit
     required: true
@@ -52,7 +58,7 @@ inputs:
     type: string
 
   commit_user_name: 
-    default: "readme-action 📷"
+    default: "readme-action 📖"
     description: "The user name to use when committing changes."
     type: string
 
@@ -62,7 +68,7 @@ inputs:
     type: string
 
   commit_author: 
-    default: "readme-action 📷 <actions@github.com>"
+    default: "readme-action 📖 <actions@github.com>"
     description: "The author to use when committing changes."
     type: string
 
@@ -217,6 +223,11 @@ runs:
           echo Ignoring whitespace-only changes in README
         fi
         echo "file=README.md" >> $GITHUB_OUTPUT
+
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
+      with:
+        file-path: ${{ steps.readme.outputs.file }}
 
     - uses: stefanzweifel/git-auto-commit-action@v4
       if: inputs.commit_method == 'commit'
