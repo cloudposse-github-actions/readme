@@ -29,4 +29,4 @@ jobs:
         with:
           banner_enabled: true
           readme_enabled: true
-          github_access_token: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.PUBLIC_REPO_ACCESS_TOKEN }}
