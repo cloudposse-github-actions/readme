@@ -3,7 +3,7 @@ description: |
   Rebuilds README.md and associated banners from templates and README.yaml metadata and runs link validation.
   This opinionated implementation builds upon Cloud Posse's build-harness and README.yaml
   used through out Cloud Posse's GitHub repositories.
-author: hello@cloudposse.com
+author: maintainers@cloudposse.com
 branding:
   icon: 'edit'
   color: 'white'
@@ -12,80 +12,69 @@ inputs:
     description: "GitHub API token (use a PAT if you need to trigger other actions)" 
     default: "${{ github.token }}"
     required: false
-    type: string
 
   repository_org:
     description: "GitHub organization or user name used for the banner templates"
     required: false
-    type: string
     default: ''
 
   repository_name:
+    description: "GitHub repository name in the `repository_org` that hosts the banner templates"
     required: false
-    type: string
     default: ''
 
   repository_description:
+    description: "GitHub repository description"
     required: false
-    type: string
     default: ''
 
   banner_enabled:
+    description: "Enable banner generation"
     required: false
-    type: boolean
-    default: true
+    default: 'true'
 
   readme_enabled:
+    description: "Enable README generation"
     required: false
-    type: boolean
-    default: true
+    default: 'true'
 
   validate_readme:
-    type: boolean
     required: false
-    default: true
+    default: 'true'
     description: "Validate the README.md file using markdown-link-check"
 
   commit_method:
     default: commit
     required: true
-    type: string
     description: "The method to apply changes. Can be either 'commit' or 'pr'."
 
   commit_message: 
-    default: "chore: update README.md and docs"
+    default: "chore: update README.md"
     description: "The commit message to use when committing changes."
-    type: string
 
   commit_user_name: 
     default: "readme-action 📖"
     description: "The user name to use when committing changes."
-    type: string
 
   commit_user_email: 
     default: "actions@github.com"
     description:  "The user email to use when committing changes."
-    type: string
 
   commit_author: 
     default: "readme-action 📖 <actions@github.com>"
     description: "The author to use when committing changes."
-    type: string
 
   pr_base_branch:
     description: "Repo default base-branch for Pull Requests (when commit_method: pr)"
-    type: string
     required: false
     default: ''
 
   pr_title:
     default: "Update README.md and docs"
     description: "The title to use when creating a Pull Request (when commit_method: pr)"
-    type: string
 
   pr_labels:
     description: "Whitespace-separated list of labels to apply to Pull Requests (when commit_method: pr)"
-    type: string
     required: false
     default: |
       auto-update
