@@ -186,6 +186,7 @@ runs:
     - name: Generate banner image
       id: banner
       uses: cloudposse-github-actions/screenshot@main
+      if: inputs.banner_enabled == 'true'
       with:
         url: "file://${{github.workspace}}/github/banner/index.html"
         output: "${{ steps.meta.outputs.output }}"
