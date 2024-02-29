@@ -218,6 +218,7 @@ runs:
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
       with:
         file-path: ${{ steps.readme.outputs.file }}
+        check-modified-files-only: true
 
     - uses: stefanzweifel/git-auto-commit-action@v4
       if: inputs.commit_method == 'commit'
