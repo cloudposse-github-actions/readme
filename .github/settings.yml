@@ -1,2 +1,2 @@
 # These settings are synced to GitHub by https://probot.github.io/apps/settings/
-extends: cloudposse-github-actions/.github
+_extends: .github
