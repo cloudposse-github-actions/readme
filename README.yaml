@@ -71,7 +71,8 @@ usage: |-
             readme_enabled: true
 
       outputs:
-        result: ${{ steps.readme.outputs.result1 }}
+        banner_file: ${{ steps.readme.outputs.banner_file }}
+        readme_file: ${{ steps.readme.outputs.readme_file }}
   ```
 
   ## Advanced Usage
