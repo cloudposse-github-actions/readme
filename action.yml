@@ -219,6 +219,7 @@ runs:
       with:
         file-path: ${{ steps.readme.outputs.file }}
         check-modified-files-only: true
+        max-depth: 0
 
     - uses: stefanzweifel/git-auto-commit-action@v4
       if: inputs.commit_method == 'commit'
