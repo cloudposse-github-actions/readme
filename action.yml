@@ -1,23 +1,295 @@
-name: 'Example composite GitHub action'
-description: 'Example composite GitHub action'
-author: hello@cloudposse.com
+name: 'README Generator'
+description: |
+  Rebuilds README.md and associated banners from templates and README.yaml metadata and runs link validation.
+  This opinionated implementation builds upon Cloud Posse's build-harness and README.yaml
+  used through out Cloud Posse's GitHub repositories.
+author: maintainers@cloudposse.com
 branding:
-  icon: 'file'
+  icon: 'edit'
   color: 'white'
 inputs:
-  param1:
+  token:
+    description: "GitHub API token (use a PAT if you need to trigger other actions)" 
+    default: "${{ github.token }}"
+    required: false
+
+  repository_org:
+    description: "GitHub organization or user name used for the banner templates"
+    required: false
+    default: ''
+
+  repository_name:
+    description: "GitHub repository name in the `repository_org` that hosts the banner templates"
+    required: false
+    default: ''
+
+  repository_description:
+    description: "GitHub repository description"
+    required: false
+    default: ''
+
+  banner_enabled:
+    description: "Enable banner generation"
+    required: false
+    default: 'true'
+
+  readme_enabled:
+    description: "Enable README generation"
+    required: false
+    default: 'true'
+
+  validate_readme:
+    required: false
+    default: 'true'
+    description: "Validate the README.md file using markdown-link-check"
+
+  commit_method:
+    default: commit
     required: true
-    description: "Input parameter placeholder"
-    default: "true"
+    description: "The method to apply changes. Can be either 'commit' or 'pr'."
+
+  commit_message: 
+    default: "chore: update README.md"
+    description: "The commit message to use when committing changes."
+
+  commit_user_name: 
+    default: "readme-action 📖"
+    description: "The user name to use when committing changes."
+
+  commit_user_email: 
+    default: "actions@github.com"
+    description:  "The user email to use when committing changes."
+
+  commit_author: 
+    default: "readme-action 📖 <actions@github.com>"
+    description: "The author to use when committing changes."
+
+  pr_base_branch:
+    description: "Repo default base-branch for Pull Requests (when commit_method: pr)"
+    required: false
+    default: ''
+
+  pr_title:
+    default: "Update README.md and docs"
+    description: "The title to use when creating a Pull Request (when commit_method: pr)"
+
+  pr_labels:
+    description: "Whitespace-separated list of labels to apply to Pull Requests (when commit_method: pr)"
+    required: false
+    default: |
+      auto-update
+      no-release
+      readme
+
 outputs:
-  result1:
-    description: "Output result placeholder"
-    value: "${{ steps.context.outputs.action-result }}"
+  banner_file:
+    description: "Generated banner file path (if banner_enabled: true)"
+    value: "${{ steps.screenshot.outputs.file }}"
+  readme_file:
+    description: "Generated README file path (if readme_enabled: true)"
+    value: "${{ steps.readme.outputs.file }}"
+    
 runs:
   using: "composite"
   steps:
-    - id: context
+
+    - name: Fetch repo metadata
+      id: metadata
+      uses: ahmadnassri/action-metadata@v2
+
+    - name: Checkout ${{ inputs.repository_org || steps.metadata.outputs.owner_login}}/.github
+      if: steps.metadata.outputs.repository_name != '.github'
+      uses: actions/checkout@v4
+      with:
+        repository: '${{ inputs.repository_org || steps.metadata.outputs.owner_login }}/.github'
+        ref: 'main'
+        path: 'github'
+
+    - uses: actions-tools/yaml-outputs@49506207f91d468273fd5e73fbd18d6d2d9df9b1
+      id: config
+      with:
+        file-path: 'README.yaml'
+        fail-on-file-not-found: false
+
+    - name: Symlink ${{github.workspace}} to `github/`
+      if: steps.metadata.outputs.repository_name == '.github'
       shell: bash
       run: |
-          echo "action-result=${{ inputs.param1 }}" >> $GITHUB_OUTPUT
+        ln -s ${{github.workspace}} ${{github.workspace}}/github
 
+    - name: Format Repo Metadata
+      id: meta
+      uses: actions/github-script@v7
+      env:
+        README_NAME: ${{steps.config.outputs.name}}
+        REPOSITORY_NAME: ${{ steps.metadata.outputs.repository_name }}
+        REPOSITORY_DESCRIPTION: ${{ steps.metadata.outputs.repository_description }}
+      with:
+        script: |
+          const wrapEmoji = (text) => {
+            // https://gist.github.com/srsbiz/2b1b4d624e82bf5c92fceb12aad4cd22
+            const reEmoji = /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/gu;
+            return text.replace(reEmoji, '<span class="emoji" role="img" aria-hidden="true">$&</span>');
+          }
+
+          let name = process.env.README_NAME || process.env.REPOSITORY_NAME
+          let type = 'Project';
+          let desc = process.env.REPOSITORY_DESCRIPTION;
+          let output = '.github/banner.png';
+
+          // Logic to determine repository type and modify name and type accordingly
+          if (name.startsWith('terraform-')) {
+            type = name.includes('provider') ? 'Terraform Provider' : 'Terraform Module';
+            name = name.replace('terraform-', '');
+          } else if (name.startsWith('github-action-')) {
+            type = 'GitHub Action';
+            name = name.replace('github-action-', '');
+          } else if (name.startsWith('example-')) {
+            type = 'Example';
+            name = name.replace('example-', '');
+          } else if (name.startsWith('infra-')) {
+            type = 'Infrastructure';
+            name = name.replace('infra-', '');
+          } else if (name === '.github') {
+            type = '🛠️ Configuration';
+          }
+
+          // Handling description
+          if (desc === 'null') {
+            desc = '';
+          } else {
+            desc = desc.split('.')[0]; // Keeping only the first sentence
+          }
+
+          // Wrapping emojis
+          type = wrapEmoji(type);
+          name = wrapEmoji(name);
+          desc = wrapEmoji(desc);
+
+          // Setting outputs
+          core.setOutput('type', type);
+          core.setOutput('name', name);
+          core.setOutput('desc', desc);
+          core.setOutput('output', output);
+
+    - name: Generate banner image
+      id: banner
+      uses: cloudposse-github-actions/screenshot@main
+      if: inputs.banner_enabled == 'true'
+      with:
+        url: "file://${{github.workspace}}/github/banner/index.html"
+        output: "${{ steps.meta.outputs.output }}"
+        customizations: |
+          "#name": >-
+            ${{ steps.meta.outputs.name }}
+          "#type": >-
+            ${{ steps.meta.outputs.type }}
+          "#desc": >-
+            ${{ steps.meta.outputs.desc }}
+        viewportWidth: 1280
+        viewportHeight: 320
+        omitBackground: true
+
+    - name: Initialize Makefile with `build-harness` support
+      if: inputs.readme_enabled == 'true'
+      shell: bash
+      run: |
+        if [[ ! -f Makefile ]]; then
+          echo '-include $(shell curl -sSL -o .build-harness "https://cloudposse.tools/build-harness"; echo .build-harness)' > Makefile
+        fi
+
+    - name: Update readme
+      if: inputs.readme_enabled == 'true'
+      shell: bash
+      id: readme
+      env:
+        GITHUB_TOKEN: "${{ inputs.token }}"
+      run: |
+        make init
+        make readme/build
+        # Ignore changes if they are only whitespace
+        if ! git diff --quiet README.md && git diff --ignore-all-space --ignore-blank-lines --quiet README.md; then
+          git restore README.md
+          echo Ignoring whitespace-only changes in README
+        fi
+        echo "file=README.md" >> $GITHUB_OUTPUT
+
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
+      with:
+        file-path: ${{ steps.readme.outputs.file }}
+
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      if: inputs.commit_method == 'commit'
+      name: Commit artifact
+      id: auto-commit
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with:
+        # parameterize the following..
+        commit_message: "${{ inputs.commit_message }}"
+        commit_user_name: "${{ inputs.commit_user_name }}"
+        commit_user_email: "${{ inputs.commit_user_email }}"
+        commit_author: "${{ inputs.commit_author }}"
+        file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
+
+    - name: Add Image to Step Summary
+      if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
+      shell: bash
+      run: |
+        echo "## Generated Screenshot" >> $GITHUB_STEP_SUMMARY
+        echo "![Generated Screenshot](https://github.com/${{ github.repository }}/blob/${{ steps.auto-commit.outputs.commit_hash }}/${{ steps.banner.outputs.file }}?raw=true)" >> $GITHUB_STEP_SUMMARY
+
+    - name: No changes
+      if: steps.auto-commit.outputs.changes_detected == 'false' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
+      shell: bash
+      run: |
+        echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
+        echo "> No changes to screenshot" >> $GITHUB_STEP_SUMMARY   
+
+    - name: Create Pull Request
+      if: inputs.commit_method == 'pr'
+      uses: cloudposse/actions/github/create-pull-request@0.33.0
+      id: auto-pr
+
+      with:
+        title: ${{ inputs.pr_title }}
+        author: ${{ inputs.commit_author }}
+        commit-message: ${{ inputs.commit_message }}
+        committer: ${{ inputs.commit_author }}
+        add-paths: |
+          ${{ steps.banner.outputs.file }},
+          ${{ steps.readme.outputs.file }},
+          docs/*
+
+        body: |-
+          ## what
+          This is an auto-generated PR that updates the README.md and docs
+
+          ## why
+          To have most recent changes of README.md and doc from origin templates
+
+        branch: auto-update/readme
+        base: ${{ inputs.pr_base_branch || steps.metadata.outputs.repository_default_branch }}
+        delete-branch: true
+        labels: ${{ inputs.pr_labels }}
+          
+        # Requires a GitHub PAT used to open PRs that trigger other workflows
+        # https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow
+        token: ${{ inputs.token }}
+
+    - name: Add Image to Step Summary
+      if: steps.auto-pr.outputs.pull-request-number && inputs.commit_method == 'pr' && inputs.banner_enabled == 'true'
+      shell: bash
+      run: |
+        echo "## Generated Pull Request" >> $GITHUB_STEP_SUMMARY
+        echo "Pull Request Number: #${{ steps.auto-pr.outputs.pull-request-number }}" >> $GITHUB_STEP_SUMMARY    
+        echo "Pull Request URL: ${{ steps.auto-pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY    
+
+    - name: No changes
+      if: steps.auto-pr.outputs.pull-request-number == false && inputs.commit_method == 'pr'
+      shell: bash
+      run: |
+        echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
+        echo "> No pull request was created." >> $GITHUB_STEP_SUMMARY
+    
