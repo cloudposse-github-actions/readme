@@ -48,6 +48,12 @@ inputs:
     required: true
     description: "The method to apply changes. Can be either 'commit' or 'pr'."
 
+  commit_push_options:
+    default: ''
+    description: |
+      The push options to use when committing changes. Use --force-with-lease to avoid overwriting changes when pushing
+      to a protected branch using admin or bypass privileges. See https://git-scm.com/docs/git-push#_options for more.
+
   commit_message: 
     default: "chore: update README.md"
     description: "The commit message to use when committing changes."
@@ -68,6 +74,11 @@ inputs:
     description: "Repo default base-branch for Pull Requests (when commit_method: pr)"
     required: false
     default: ''
+
+  pr_branch:
+    description: "Branch to create Pull Requests from (when commit_method: pr). Suggest using a protected branch for auto-merge capabilities."
+    required: false
+    default: 'auto-update/readme'
 
   pr_title:
     default: "Update README.md and docs"
@@ -197,6 +208,7 @@ runs:
         if [[ ! -f Makefile ]]; then
           echo '-include $(shell curl -sSL -o .build-harness "https://cloudposse.tools/build-harness"; echo .build-harness)' > Makefile
         fi
+        make init
 
     - name: Update readme
       if: inputs.readme_enabled == 'true'
@@ -205,7 +217,6 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
-        make init
         make readme/build
         # Ignore changes if they are only whitespace
         if ! git diff --quiet README.md && git diff --ignore-all-space --ignore-blank-lines --quiet README.md; then
@@ -228,12 +239,12 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
       with:
-        # parameterize the following..
         commit_message: "${{ inputs.commit_message }}"
         commit_user_name: "${{ inputs.commit_user_name }}"
         commit_user_email: "${{ inputs.commit_user_email }}"
         commit_author: "${{ inputs.commit_author }}"
         file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
+        push_options: '${{ inputs.commit_push_options }}'
 
     - name: Add Image to Step Summary
       if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
@@ -251,17 +262,16 @@ runs:
 
     - name: Create Pull Request
       if: inputs.commit_method == 'pr'
-      uses: cloudposse/actions/github/create-pull-request@0.33.0
+      uses: peter-evans/create-pull-request@v5
       id: auto-pr
-
       with:
         title: ${{ inputs.pr_title }}
         author: ${{ inputs.commit_author }}
         commit-message: ${{ inputs.commit_message }}
         committer: ${{ inputs.commit_author }}
         add-paths: |
-          ${{ steps.banner.outputs.file }},
-          ${{ steps.readme.outputs.file }},
+          ${{ steps.banner.outputs.file }}
+          ${{ steps.readme.outputs.file }}
           docs/*
 
         body: |-
@@ -271,7 +281,7 @@ runs:
           ## why
           To have most recent changes of README.md and doc from origin templates
 
-        branch: auto-update/readme
+        branch: ${{ inputs.pr_branch }}
         base: ${{ inputs.pr_base_branch || steps.metadata.outputs.repository_default_branch }}
         delete-branch: true
         labels: ${{ inputs.pr_labels }}
