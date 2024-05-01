@@ -115,6 +115,7 @@ runs:
         repository: '${{ inputs.repository_org || steps.metadata.outputs.owner_login }}/.github'
         ref: 'main'
         path: 'github'
+        token: "${{ inputs.token }}"
 
     - uses: actions-tools/yaml-outputs@49506207f91d468273fd5e73fbd18d6d2d9df9b1
       id: config
