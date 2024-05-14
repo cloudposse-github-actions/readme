@@ -117,11 +117,10 @@ runs:
         path: 'github'
         token: "${{ inputs.token }}"
 
-    - uses: actions-tools/yaml-outputs@49506207f91d468273fd5e73fbd18d6d2d9df9b1
+    - uses: mikefarah/yq@557dcb87b8efe786f89a12c09e9046b4753ab72e
       id: config
       with:
-        file-path: 'README.yaml'
-        fail-on-file-not-found: false
+        cmd: yq '.name' 'README.yaml'
 
     - name: Symlink ${{github.workspace}} to `github/`
       if: steps.metadata.outputs.repository_name == '.github'
@@ -133,7 +132,7 @@ runs:
       id: meta
       uses: actions/github-script@v7
       env:
-        README_NAME: ${{steps.config.outputs.name}}
+        README_NAME: ${{steps.config.outputs.result}}
         REPOSITORY_NAME: ${{ steps.metadata.outputs.repository_name }}
         REPOSITORY_DESCRIPTION: ${{ steps.metadata.outputs.repository_description }}
       with:
