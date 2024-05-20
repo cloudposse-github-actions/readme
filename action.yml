@@ -118,7 +118,7 @@ runs:
         token: "${{ inputs.token }}"
 
     - uses: mikefarah/yq@557dcb87b8efe786f89a12c09e9046b4753ab72e
-      id: config
+      id: name
       with:
         cmd: yq '.name' 'README.yaml'
 
@@ -132,7 +132,7 @@ runs:
       id: meta
       uses: actions/github-script@v7
       env:
-        README_NAME: ${{steps.config.outputs.result}}
+        README_NAME: ${{steps.name.outputs.result}}
         REPOSITORY_NAME: ${{ steps.metadata.outputs.repository_name }}
         REPOSITORY_DESCRIPTION: ${{ steps.metadata.outputs.repository_description }}
       with:
