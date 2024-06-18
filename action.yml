@@ -257,7 +257,7 @@ runs:
       if: steps.auto-commit.outputs.changes_detected == 'false' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
       shell: bash
       run: |
-        echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
+        echo "> [!IMPORTANT]" >> $GITHUB_STEP_SUMMARY
         echo "> No changes to screenshot" >> $GITHUB_STEP_SUMMARY   
 
     - name: Create Pull Request
@@ -302,7 +302,7 @@ runs:
       if: steps.auto-pr.outputs.pull-request-number == false && inputs.commit_method == 'pr'
       shell: bash
       run: |
-        echo "> [!IMPORANT]" >> $GITHUB_STEP_SUMMARY
+        echo "> [!IMPORTANT]" >> $GITHUB_STEP_SUMMARY
         echo "> No pull request was created." >> $GITHUB_STEP_SUMMARY
 
 
