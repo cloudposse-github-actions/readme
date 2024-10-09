@@ -247,7 +247,7 @@ runs:
         push_options: '${{ inputs.commit_push_options }}'
 
     - uses: actions/github-script@v7
-      if: inputs.readme_enabled == 'true' && inputs.commit_method == 'commit' && github.event_name == 'pull_request'
+      if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.commit_method == 'commit' && github.event_name == 'pull_request'
       with:
         script: |
           labels = '${{ inputs.pr_labels }}'.split(' ')
