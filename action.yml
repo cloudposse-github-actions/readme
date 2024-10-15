@@ -99,6 +99,9 @@ outputs:
   readme_file:
     description: "Generated README file path (if readme_enabled: true)"
     value: "${{ steps.readme.outputs.file }}"
+  changes_detected:
+    description: "Changes detected"
+    value: "${{ steps.auto-commit.outputs.changes_detected }}"
     
 runs:
   using: "composite"
