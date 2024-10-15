@@ -101,7 +101,7 @@ outputs:
     value: "${{ steps.readme.outputs.file }}"
   changes_detected:
     description: "Changes detected"
-    value: "${{ steps.auto-commit.outputs.changes_detected }}"
+    value: "${{ steps.auto-commit.outputs.changes_detected || steps.auto-pr.outputs.pull-request-number != false }}"
     
 runs:
   using: "composite"
