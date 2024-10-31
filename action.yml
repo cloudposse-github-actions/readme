@@ -232,12 +232,12 @@ runs:
       if: inputs.readme_enabled == 'true'
       shell: bash
       run: |
-        dirs=$(find .  -type d \( -name '.terraform*' -o -name 'obsolete*' \) -prune -o \
+        dirs=($(find .  -type d \( -name '.terraform*' -o -name 'obsolete*' \) -prune -o \
           -name '*.tf' \
           -not -path '*/.terraform/*' \
           -exec dirname {} \; \
           | sort \
-          | uniq )
+          | uniq ))
         
         for item in "${dirs[@]}"; do
           current_dir=$(pwd)
