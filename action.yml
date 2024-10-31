@@ -317,6 +317,7 @@ runs:
         add-paths: |
           ${{ steps.banner.outputs.file }}
           ${{ steps.readme.outputs.file }}
+          **/README.md
           docs/*
 
         body: |-
