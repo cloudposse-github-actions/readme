@@ -241,6 +241,7 @@ runs:
         
         for item in "${dirs[@]}"; do
           current_dir=$(pwd)
+          echo "${item}"
           cd $item
           
           if [[ -f README.md ]]; then
