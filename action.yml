@@ -228,6 +228,28 @@ runs:
         fi
         echo "file=README.md" >> $GITHUB_OUTPUT
 
+    - id: rebuild-submodules
+      if: inputs.readme_enabled == 'true'
+      shell: bash
+      run: |
+        dirs=$(find .  -type d \( -name '.terraform*' -o -name 'obsolete*' \) -prune -o \
+          -name '*.tf' \
+          -not -path '*/.terraform/*' \
+          -exec dirname {} \; \
+          | sort \
+          | uniq )
+        
+        for item in "${dirs[@]}"; do
+          current_dir=$(pwd)
+          cd $item
+          
+          if [[ -f README.md ]]; then
+            terraform-docs markdown ./ --config ${GITHUB_ACTION_PATH}/templates/terraform-docs.yml             
+          fi
+          
+          cd $current_dir
+        done
+
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
       with:
