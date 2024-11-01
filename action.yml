@@ -246,19 +246,13 @@ runs:
           | sort \
           | uniq ))
         
-        for item in "${dirs[@]}"; do
-          current_dir=$(pwd)
-          echo "${item}"
-          cd $item
-          
-          if [[ -f README.md ]]; then
-            terraform-docs markdown ./ \
-              --output-file ./README.md \
+        for dir in "${dirs[@]}"; do
+          if [[ -f ${dir}/README.md ]]; then
+            terraform-docs markdown ${dir} \
+              --output-file ${dir}/README.md \
               --output-mode inject \
               --output-template "<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->\n{{ .Content }}\n<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->"
           fi
-          
-          cd $current_dir
         done
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
