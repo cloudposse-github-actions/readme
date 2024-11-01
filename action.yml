@@ -252,7 +252,10 @@ runs:
           cd $item
           
           if [[ -f README.md ]]; then
-            terraform-docs markdown ./ --config ${GITHUB_ACTION_PATH}/templates/terraform-docs.yml             
+            terraform-docs markdown ./ \
+              --output-file ./README.md \
+              --output-mode inject \
+              --output-template "<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->\n{{ .Content }}\n<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->"
           fi
           
           cd $current_dir
