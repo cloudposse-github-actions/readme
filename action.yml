@@ -92,6 +92,10 @@ inputs:
       no-release
       readme
 
+  sign-commits:
+    description: 'Sign commits for `pr` commit_method as `github-actions[bot]` when using `GITHUB_TOKEN`, or your own bot when using GitHub App tokens.'
+    default: false
+
 outputs:
   banner_file:
     description: "Generated banner file path (if banner_enabled: true)"
@@ -316,6 +320,7 @@ runs:
         author: ${{ inputs.commit_author }}
         commit-message: ${{ inputs.commit_message }}
         committer: ${{ inputs.commit_author }}
+        sign-commits: ${{ inputs.sign-commits }}
         add-paths: |
           ${{ steps.banner.outputs.file }}
           ${{ steps.readme.outputs.file }}
