@@ -113,6 +113,37 @@ usage: |-
               banner_enabled: true
               readme_enabled: true
   ```
+
+  ### Migrating from `v0` to `v1`
+  
+  `v1` use [atmos](https://atmos.tools/cli/commands/docs/generate) instead of [build-harness](https://github.com/cloudposse/build-harness).
+  You can drop `Makefile` if you use it only for readme generation.
+  To support atmos reaadme generation, you must create `atmos.yaml` config. 
+  The configuration depends on your repo - please follow this [documentation](https://atmos.tools/cli/commands/docs/generate)
+
+  Example: 
+
+  ```yaml filename="atmos.yaml"
+  docs:
+  generate:
+    readme:
+      base-dir: .
+      input:
+        - "./README.yaml"
+      template: "https://.../README.md.gotmpl"
+      output: "./README.md"
+      terraform:
+        source: src/
+        enabled: false
+        format: "markdown"
+        show_providers: false
+        show_inputs: true
+        show_outputs: true
+        sort_by: "name"
+        hide_empty: false
+        indent_level: 2
+  ```
+  
 include:
   - "docs/github-action.md"
 
