@@ -85,12 +85,16 @@ inputs:
     description: "The title to use when creating a Pull Request (when commit_method: pr)"
 
   pr_labels:
-    description: "Whitespace-separated list of labels to apply to Pull Requests (when commit_method: pr)"
+    description: "Whitespace-separated list of labels to apply to Pull Requests (when commit_method: pr or ( commit_method: commit and github context is a PR) )"
     required: false
     default: |
       auto-update
       no-release
       readme
+
+  sign-commits:
+    description: 'Sign commits for `pr` commit_method as `github-actions[bot]` when using `GITHUB_TOKEN`, or your own bot when using GitHub App tokens.'
+    default: 'false'
 
 outputs:
   banner_file:
@@ -99,6 +103,9 @@ outputs:
   readme_file:
     description: "Generated README file path (if readme_enabled: true)"
     value: "${{ steps.readme.outputs.file }}"
+  changes_detected:
+    description: "Changes detected"
+    value: "${{ steps.auto-commit.outputs.changes_detected || steps.auto-pr.outputs.pull-request-number != false }}"
     
 runs:
   using: "composite"
@@ -225,6 +232,38 @@ runs:
         fi
         echo "file=README.md" >> $GITHUB_OUTPUT
 
+    - name: "Install terraform-docs"
+      uses: jaxxstorm/action-install-gh-release@v1.12.0
+      with:
+        repo: terraform-docs/terraform-docs
+        tag: v0.19.0
+        cache: enable
+
+    - id: rebuild-submodules
+      if: inputs.readme_enabled == 'true'
+      shell: bash
+      run: |
+        terraform-docs markdown ./src \
+          --output-file ../README.md \
+          --output-mode inject \
+          --output-template "<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->\n{{ .Content }}\n<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->"
+        
+        dirs=($(find .  -type d \( -name '.terraform*' -o -name 'obsolete*' \) -prune -o \
+          -name '*.tf' \
+          -not -path '*/.terraform/*' \
+          -exec dirname {} \; \
+          | sort \
+          | uniq ))
+        
+        for module_dir in "${dirs[@]}"; do
+          if [[ -f ${module_dir}/README.md ]]; then
+            terraform-docs markdown ${module_dir} \
+              --output-file README.md \
+              --output-mode inject \
+              --output-template "<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->\n{{ .Content }}\n<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->"
+          fi
+        done
+
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
       with:
@@ -243,8 +282,20 @@ runs:
         commit_user_name: "${{ inputs.commit_user_name }}"
         commit_user_email: "${{ inputs.commit_user_email }}"
         commit_author: "${{ inputs.commit_author }}"
-        file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
+        file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }} **/README.md'
         push_options: '${{ inputs.commit_push_options }}'
+
+    - uses: actions/github-script@v7
+      if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.commit_method == 'commit' && github.event_name == 'pull_request'
+      with:
+        script: |
+          labels = '${{ inputs.pr_labels }}'.split(' ')
+          await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: labels
+            })
 
     - name: Add Image to Step Summary
       if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.banner_enabled == 'true' && inputs.commit_method == 'commit'
@@ -262,16 +313,18 @@ runs:
 
     - name: Create Pull Request
       if: inputs.commit_method == 'pr'
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v7
       id: auto-pr
       with:
         title: ${{ inputs.pr_title }}
         author: ${{ inputs.commit_author }}
         commit-message: ${{ inputs.commit_message }}
         committer: ${{ inputs.commit_author }}
+        sign-commits: ${{ inputs.sign-commits }}
         add-paths: |
           ${{ steps.banner.outputs.file }}
           ${{ steps.readme.outputs.file }}
+          **/README.md
           docs/*
 
         body: |-
