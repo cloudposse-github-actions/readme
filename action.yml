@@ -94,7 +94,7 @@ inputs:
 
   sign-commits:
     description: 'Sign commits for `pr` commit_method as `github-actions[bot]` when using `GITHUB_TOKEN`, or your own bot when using GitHub App tokens.'
-    default: false
+    default: 'false'
 
 outputs:
   banner_file:
