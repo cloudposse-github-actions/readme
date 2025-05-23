@@ -95,7 +95,7 @@ inputs:
   atmos-version:
     description: The version of atmos to install
     required: false
-    default: ">= 1.175.0"
+    default: '>= 1.175.0'
 
   token:
     description: |-
