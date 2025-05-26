@@ -127,6 +127,36 @@ it to the main branch.
             readme_enabled: true
 ```
 
+### Migrating from `v0` to `v1`
+
+`v1` use [atmos](https://atmos.tools/cli/commands/docs/generate) instead of [build-harness](https://github.com/cloudposse/build-harness).
+You can drop `Makefile` if you use it only for readme generation.
+To support atmos reaadme generation, you must create `atmos.yaml` config. 
+The configuration depends on your repo - please follow this [documentation](https://atmos.tools/cli/commands/docs/generate)
+
+Example: 
+
+```yaml filename="atmos.yaml"
+docs:
+generate:
+  readme:
+    base-dir: .
+    input:
+      - "./README.yaml"
+    template: "https://.../README.md.gotmpl"
+    output: "./README.md"
+    terraform:
+      source: src/
+      enabled: false
+      format: "markdown"
+      show_providers: false
+      show_inputs: true
+      show_outputs: true
+      sort_by: "name"
+      hide_empty: false
+      indent_level: 2
+```
+
 
 
 
@@ -138,6 +168,7 @@ it to the main branch.
 
 | Name | Description | Default | Required |
 |------|-------------|---------|----------|
+| atmos-version | The version of atmos to install | >= 1.175.0 | false |
 | banner\_enabled | Enable banner generation | true | false |
 | commit\_author | The author to use when committing changes. | readme-action 📖 <actions@github.com> | false |
 | commit\_message | The commit message to use when committing changes. | chore: update README.md | false |
@@ -153,6 +184,7 @@ it to the main branch.
 | repository\_description | GitHub repository description |  | false |
 | repository\_name | GitHub repository name in the `repository\_org` that hosts the banner templates |  | false |
 | repository\_org | GitHub organization or user name used for the banner templates |  | false |
+| target | Configuration name | readme | true |
 | token | GitHub API token (use a PAT if you need to trigger other actions) | ${{ github.token }} | false |
 | validate\_readme | Validate the README.md file using markdown-link-check | true | false |
 
@@ -287,7 +319,7 @@ under the License.
 
 All other trademarks referenced herein are the property of their respective owners.
 ---
-Copyright © 2017-2024 [Cloud Posse, LLC](https://cpco.io/copyright)
+Copyright © 2017-2025 [Cloud Posse, LLC](https://cpco.io/copyright)
 
 
 <a href="https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse-github-actions/readme&utm_content=readme_footer_link"><img alt="README footer" src="https://cloudposse.com/readme/footer/img"/></a>
