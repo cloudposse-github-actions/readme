@@ -41,6 +41,7 @@ inputs:
   target:
     description: "Configuration name"
     required: true
+    default: 'readme'
 
   validate_readme:
     required: false
@@ -224,7 +225,7 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
-        output_file=$(atmos docs generate readme 2>&1 | sed -n -e  "s/^.*output=//p")
+        output_file=$(atmos docs generate ${{ inputs.target }} 2>&1 | sed -n -e  "s/^.*output=//p")
         # Get relative path from absolute
         output_file=$(realpath -s --relative-to="$PWD" "$output_file")
         # Ignore changes if they are only whitespace
