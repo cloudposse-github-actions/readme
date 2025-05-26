@@ -38,6 +38,10 @@ inputs:
     required: false
     default: 'true'
 
+  target:
+    description: "Configuration name"
+    required: true
+
   validate_readme:
     required: false
     default: 'true'
@@ -220,13 +224,15 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
-        atmos docs generate readme
+        output_file=$(atmos docs generate readme 2>&1 | sed -n -e  "s/^.*output=//p")
+        # Get relative path from absolute
+        output_file=$(realpath -s --relative-to="$PWD" "$output_file")
         # Ignore changes if they are only whitespace
-        if ! git diff --quiet README.md && git diff --ignore-all-space --ignore-blank-lines --quiet README.md; then
-          git restore README.md
-          echo Ignoring whitespace-only changes in README
+        if ! git diff --quiet ${output_file} && git diff --ignore-all-space --ignore-blank-lines --quiet ${output_file}; then
+          git restore ${output_file}
+          echo Ignoring whitespace-only changes in generated file
         fi
-        echo "file=README.md" >> $GITHUB_OUTPUT
+        echo "file=${output_file}" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
