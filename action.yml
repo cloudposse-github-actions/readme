@@ -236,6 +236,12 @@ runs:
         atmos ${{ inputs.command }}
         # Get all changed files and process them
         echo "1"
+        git status --porcelain
+        echo "1 - 1"
+        git status --porcelain | grep "^ M"
+        echo "1 - 2"
+        git status --porcelain | grep "^ M" | cut -c4-
+        echo "1 - 3"
         changed_files=$(git status --porcelain | grep "^ M" | cut -c4-)
         echo "2"
         set +e
