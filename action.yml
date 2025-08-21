@@ -245,7 +245,7 @@ runs:
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
       with:
-        file-path: '${{ steps.readme.outputs.file }} **/README.md'
+        file-path: ${{ steps.readme.outputs.file }}
         check-modified-files-only: true
         max-depth: 0
 
