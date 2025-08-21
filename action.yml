@@ -232,6 +232,7 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
+        atmos docs generate ${{ inputs.target }}
         output_file=$(atmos docs generate ${{ inputs.target }} 2>&1 | sed -n -e  "s/^.*output=//p")
         # Get relative path from absolute
         output_file=$(realpath -s --relative-to="$PWD" "$output_file")
