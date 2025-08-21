@@ -232,9 +232,11 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
+        set -e
         atmos ${{ inputs.command }}
         # Get all changed files and process them
         changed_files=$(git status --porcelain | grep "^ M" | cut -c4-)
+        set +e
         for file in $changed_files; do
           # Ignore changes if they are only whitespace
           if ! git diff --quiet "$file" && git diff --ignore-all-space --ignore-blank-lines --quiet "$file"; then
