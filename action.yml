@@ -38,10 +38,10 @@ inputs:
     required: false
     default: 'true'
 
-  target:
-    description: "Configuration name"
+  command:
+    description: "Atmos command to generate readme"
     required: true
-    default: 'readme'
+    default: 'docs generate readme'
 
   validate_readme:
     required: false
@@ -232,7 +232,7 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
-        atmos ${{ inputs.target }}
+        atmos ${{ inputs.command }}
         # Get all changed files and process them
         changed_files=$(git status --porcelain | grep "^ M" | cut -c4-)
         for file in $changed_files; do
