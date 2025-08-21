@@ -232,15 +232,17 @@ runs:
       env:
         GITHUB_TOKEN: "${{ inputs.token }}"
       run: |
-        output_file=$(atmos docs generate ${{ inputs.target }} 2>&1 | sed -n -e  "s/^.*output=//p")
-        # Get relative path from absolute
-        output_file=$(realpath -s --relative-to="$PWD" "$output_file")
-        # Ignore changes if they are only whitespace
-        if ! git diff --quiet ${output_file} && git diff --ignore-all-space --ignore-blank-lines --quiet ${output_file}; then
-          git restore ${output_file}
-          echo Ignoring whitespace-only changes in generated file
-        fi
-        echo "file=${output_file}" >> $GITHUB_OUTPUT
+        atmos ${{ inputs.target }}
+        # Get all changed files and process them
+        changed_files=$(git status --porcelain | grep "^ M" | cut -c4-)
+        for file in $changed_files; do
+          # Ignore changes if they are only whitespace
+          if ! git diff --quiet "$file" && git diff --ignore-all-space --ignore-blank-lines --quiet "$file"; then
+            git restore "$file"
+            echo "Ignoring whitespace-only changes in generated file: $file"
+          fi
+        done
+        echo "file=$(echo $changed_files | tr '\n' ' ')" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
@@ -302,8 +304,6 @@ runs:
         add-paths: |
           ${{ steps.banner.outputs.file }}
           ${{ steps.readme.outputs.file }}
-          **/README.md
-          docs/*
         body: |-
           ## what
           This is an auto-generated PR that updates the README.md and docs
