@@ -256,7 +256,11 @@ runs:
           fi
         done
         echo "5"
-        echo "file=${changed_files// /,}" >> $GITHUB_OUTPUT
+        OLDIFS="$IFS"
+        IFS=","
+        files="${changed_files[*]}"
+        IFS="$OLDIFS"        
+        echo "file=${files}" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
@@ -276,7 +280,7 @@ runs:
         commit_user_name: "${{ inputs.commit_user_name }}"
         commit_user_email: "${{ inputs.commit_user_email }}"
         commit_author: "${{ inputs.commit_author }}"
-        file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
+        file_pattern: '${{ steps.banner.outputs.file }},${{ steps.readme.outputs.file }}'
         push_options: '${{ inputs.commit_push_options }}'
  
     - uses: actions/github-script@v7
@@ -316,8 +320,7 @@ runs:
         committer: ${{ inputs.commit_author }}
         sign-commits: ${{ inputs.sign-commits }}
         add-paths: |
-          ${{ steps.banner.outputs.file }}
-          ${{ steps.readme.outputs.file }}
+          ${{ steps.banner.outputs.file }},${{ steps.readme.outputs.file }}
         body: |-
           ## what
           This is an auto-generated PR that updates the README.md and docs
