@@ -235,30 +235,16 @@ runs:
         set +e
         atmos ${{ inputs.command }}
         # Get all changed files and process them
-        echo "1"
-        git status --porcelain
-        echo "1 - 1"
-        git status --porcelain | grep "^ M"
-        echo "1 - 2"
-        git status --porcelain | grep "^ M" | cut -c4-
-        echo "1 - 3"
         changed_files=$(git status --porcelain | grep "^ M" | cut -c4-)
         set -e
-        echo "2"
-        set +e
         for file in $changed_files; do
-          echo "3"
           # Ignore changes if they are only whitespace
           if ! git diff --quiet "$file" && git diff --ignore-all-space --ignore-blank-lines --quiet "$file"; then
-            echo "4"
             git restore "$file"
             echo "Ignoring whitespace-only changes in generated file: $file"
           fi
         done
-        echo "5"
         files="$(echo ${changed_files})"
-        echo "6"
-        echo "${files// /,}"
         echo "file=${files// /,}" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
