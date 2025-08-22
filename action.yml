@@ -260,6 +260,7 @@ runs:
         IFS=","
         files="${changed_files[*]}"
         IFS="$OLDIFS"        
+        echo "6"
         echo "file=${files}" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
