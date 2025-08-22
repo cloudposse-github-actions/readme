@@ -258,8 +258,8 @@ runs:
         echo "5"
         files="$(echo ${changed_files})"
         echo "6"
-        echo "${files}"
-        echo "file=${files}" >> $GITHUB_OUTPUT
+        echo "${files// /,}"
+        echo "file=${files// /,}" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
