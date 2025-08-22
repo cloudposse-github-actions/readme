@@ -256,7 +256,7 @@ runs:
           fi
         done
         echo "5"
-        echo "file=$(echo $changed_files | tr '\n' ' ')" >> $GITHUB_OUTPUT
+        echo "file=$(echo $changed_files | tr '\n' ',')" >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
