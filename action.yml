@@ -235,7 +235,7 @@ runs:
         set +e
         atmos ${{ inputs.command }}
         # Get all changed files and process them
-        changed_files=$(git status --porcelain | grep "^ M" | cut -c4-)
+        changed_files=$(git status --porcelain | grep -E "^\s?(M|\?\?)" | cut -c4-)
         set -e
         for file in $changed_files; do
           # Ignore changes if they are only whitespace
