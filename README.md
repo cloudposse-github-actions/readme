@@ -170,6 +170,7 @@ generate:
 |------|-------------|---------|----------|
 | atmos-version | The version of atmos to install | >= 1.175.0 | false |
 | banner\_enabled | Enable banner generation | true | false |
+| command | Atmos command to generate readme | docs generate readme | true |
 | commit\_author | The author to use when committing changes. | readme-action 📖 <actions@github.com> | false |
 | commit\_message | The commit message to use when committing changes. | chore: update README.md | false |
 | commit\_method | The method to apply changes. Can be either 'commit' or 'pr'. | commit | true |
@@ -185,7 +186,6 @@ generate:
 | repository\_name | GitHub repository name in the `repository\_org` that hosts the banner templates |  | false |
 | repository\_org | GitHub organization or user name used for the banner templates |  | false |
 | sign-commits | Sign commits for `pr` commit\_method as `github-actions[bot]` when using `GITHUB\_TOKEN`, or your own bot when using GitHub App tokens. | false | false |
-| target | Configuration name | readme | true |
 | token | GitHub API token (use a PAT if you need to trigger other actions) | ${{ github.token }} | false |
 | validate\_readme | Validate the README.md file using markdown-link-check | true | false |
 
