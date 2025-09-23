@@ -120,7 +120,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-
     - name: Fetch repo metadata
       id: metadata
       uses: ahmadnassri/action-metadata@v2
