@@ -126,7 +126,7 @@ runs:
 
     - name: Checkout ${{ inputs.repository_org || steps.metadata.outputs.owner_login}}/.github
       if: steps.metadata.outputs.repository_name != '.github'
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: '${{ inputs.repository_org || steps.metadata.outputs.owner_login }}/.github'
         ref: 'main'
@@ -146,7 +146,7 @@ runs:
 
     - name: Format Repo Metadata
       id: meta
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       env:
         README_NAME: ${{steps.name.outputs.result}}
         REPOSITORY_NAME: ${{ steps.metadata.outputs.repository_name }}
@@ -218,7 +218,7 @@ runs:
         omitBackground: true
 
     - name: Install Atmos
-      uses: cloudposse/github-action-setup-atmos@v2
+      uses: cloudposse/github-action-setup-atmos@v3
       with:
         atmos-version: ${{ inputs.atmos-version }}
         token: ${{ inputs.token }}
@@ -259,7 +259,7 @@ runs:
         check-modified-files-only: true
         max-depth: 0
 
-    - uses: stefanzweifel/git-auto-commit-action@v5
+    - uses: stefanzweifel/git-auto-commit-action@v7
       if: inputs.commit_method == 'commit'
       name: Commit artifact
       id: auto-commit
@@ -273,7 +273,7 @@ runs:
         file_pattern: '${{ steps.banner.outputs.file }} ${{ steps.readme.outputs.file }}'
         push_options: '${{ inputs.commit_push_options }}'
  
-    - uses: actions/github-script@v7
+    - uses: actions/github-script@v8
       if: steps.auto-commit.outputs.changes_detected == 'true' && inputs.commit_method == 'commit' && github.event_name == 'pull_request'
       with:
         script: |
