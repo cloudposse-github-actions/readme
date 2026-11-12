@@ -250,7 +250,13 @@ runs:
           fi
         done
         files="$(echo ${changed_files})"
-        echo "file=${files// / }" >> $GITHUB_OUTPUT
+        echo "file=${files}" >> $GITHUB_OUTPUT
+        # Newline-separated list for create-pull-request `add-paths`, which splits on newlines or commas, not spaces.
+        {
+          echo "files<<EOF"
+          printf '%s\n' ${changed_files}
+          echo "EOF"
+        } >> $GITHUB_OUTPUT
 
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       if: inputs.readme_enabled == 'true' && inputs.validate_readme == 'true'
@@ -310,7 +316,8 @@ runs:
         committer: ${{ inputs.commit_author }}
         sign-commits: ${{ inputs.sign-commits }}
         add-paths: |
-          ${{ steps.banner.outputs.file }},${{ steps.readme.outputs.file }}
+          ${{ steps.banner.outputs.file }}
+          ${{ steps.readme.outputs.files }}
         body: |-
           ## what
           This is an auto-generated PR that updates the README.md and docs
@@ -341,5 +348,4 @@ runs:
       run: |
         echo "> [!IMPORTANT]" >> $GITHUB_STEP_SUMMARY
         echo "> No pull request was created." >> $GITHUB_STEP_SUMMARY
-
 
